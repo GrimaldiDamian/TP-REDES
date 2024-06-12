@@ -28,7 +28,16 @@ def propiedades(dicc):
     
     return NomProp
 
+def Informe(cantObjeto,propiedades):
+    print (f"El archivo json cuenta con un total de {cantObjeto}, y posee los siguientes atributos:")
+    for claves, valores in propiedades.items():
+        if claves == "laureates":
+            print(f"Y {claves} posee los siguientes atributos y tipos: ")
+            for laureate_props in valores.items():
+                print(f"\t{laureate_props[0]} y su tipo: {laureate_props[1]}")
+        else:
+            print(f"{claves} y su tipo: {valores}")
 diccionario = diccJson(archivoJson)
 CantidadObjeto = cantObjeto(diccionario)
 nombresPropiedades = propiedades(diccionario)
-print(nombresPropiedades)
+Informe(CantidadObjeto,nombresPropiedades)
