@@ -15,10 +15,14 @@ def descargarJson(url, save_path):
     except requests.exceptions.RequestException as e:
         print(f"Error descargando el JSON: {e}")
 
-def transformarloDic(archivo):
+def diccJson(archivo):
     with open (archivo) as file:
         dicJson = json.load(file)
     return dicJson
 
+def cantObjeto(dicc):
+    return len(dicc)
+
 descargarJson(url,archivoJson)
-transformarloDic(archivoJson)
+diccionario = diccJson(archivoJson)
+CantidadObjeto = cantObjeto(diccionario)
