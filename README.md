@@ -11,3 +11,4 @@ Una vez hecho, deberas descargar las librerias necesarias:
 
 pip install fastapi
 pip install requests
+pip install uvicorn
