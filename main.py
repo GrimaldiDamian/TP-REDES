@@ -1,7 +1,15 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import json
 
 app = FastAPI()
+
+class Laureate(BaseModel):
+    id: int
+    firstname: str
+    surname: str
+    motivation: str
+    share: int
 
 def archivo():
     with open("prize.json", 'r') as file:
@@ -49,3 +57,30 @@ def BuscarPremio(year:str,category:str):
         return f"Error: La categoría {category} no se encontró para el año {year}."
     
     return lista
+
+@app.post("/agregarPremio")
+
+def agregarPremio(anio:int,categoria:str,Premiados:list[Laureate]):
+    laureates_dict = []
+    for premiado in Premiados:
+        premiado_dict = {
+            "id": str(premiado.id),
+            "firstname": premiado.firstname,
+            "surname": premiado.surname,
+            "motivation": premiado.motivation,
+            "share": str(premiado.share)
+        }
+        laureates_dict.append(premiado_dict)
+    nuevo_premio = {
+        "year": str(anio),
+        "category": categoria,
+        "laureates": laureates_dict
+    }
+    
+    archivo["prizes"].append(nuevo_premio)
+    archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
+    
+    with open("prize.json","w") as file:
+        json.dump(archivo,file)
+    
+    return nuevo_premio
