@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import json
@@ -40,20 +40,28 @@ class Premio(BaseModel):
                 "laureates": [laureate.convertirDict() for laureate in self.laureate],
             }
 
-def archivo():
-    with open("prize.json", 'r') as file:
-        dicJson = json.load(file)
-    return dicJson
+def cargar_archivo():
+    try:
+        with open("prize.json", 'r') as file:
+            dicJson = json.load(file)
+        return dicJson
+    except FileNotFoundError:
+        return {"prizes": []}
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Error leyendo el archivo JSON")
 
-archivo = archivo()
+archivo = cargar_archivo()
 
 def actualizarArchivo():
-    with open("prize.json", "w") as file:
-        json.dump(archivo, file)
+    try:
+        with open("prize.json", "w") as file:
+            json.dump(archivo, file, indent=4)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error actualizando el archivo JSON: {e}")
 
-@app.get("/LeerArchivo")
+@app.get("/Leer_Archivo")
 
-def LeerArchivo():
+def Leer_Archivo():
     return archivo
 
 @app.get("/Categorias")
@@ -85,9 +93,9 @@ def Buscar_Premio(year:str,category:str):
                     lista.append(datos_participante)
     
     if not year_found:
-        return f"Error: El año {year} no se encontró en el archivo."
+        raise HTTPException(status_code=404, detail=f"Error: El año {year} no se encontró en el archivo.")
     if not category_found:
-        return f"Error: La categoría {category} no se encontró para el año {year}."
+        raise HTTPException(status_code=404, detail=f"Error: La categoría {category} no se encontró para el año {year}.")
     
     return lista
 
@@ -97,15 +105,15 @@ def Agregar_Premio(Premiados : Premio):
     
     nuevo_premio = Premiados.convertirDict()
     
-    archivo["prizes"].append(nuevo_premio)
-    archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
+    if nuevo_premio not in archivo["prizes"]:
+        archivo["prizes"].append(nuevo_premio)
+        archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
+        actualizarArchivo()
+        return {"nuevo_premio": nuevo_premio, "mensaje": "Se guardó correctamente"}
     
-    with open("prize.json","w") as file:
-        json.dump(archivo,file)
-    
-    return nuevo_premio, f"Se guardo correctamente"
+    raise HTTPException(status_code=400, detail="Ya existe dicho premio")
 
-@app.put("/Actualizar_Laurete")
+@app.put("/Actualizar_Laureate")
 
 def Actualizar_Laurete(year: int, categoria: str, laureates: list[Laureate]):
     for premio in archivo.get("prizes", []):
@@ -116,7 +124,7 @@ def Actualizar_Laurete(year: int, categoria: str, laureates: list[Laureate]):
             actualizarArchivo()
             return f"El laureado: {laureateAnterior} fue cambiado a {laureateActual}"
     
-    return "Fecha o categoría no encontrada"
+    raise HTTPException(status_code=404, detail="Fecha o categoría no encontrada")
 
 @app.put("/Actualizar_Categoria")
 
@@ -128,15 +136,15 @@ def Actualizar_Categoria(year:int,categoria_Anterior:str,categoria_Nueva:str):
             actualizarArchivo()
             return f"La nueva categoria fue exitosa"
     
-    return f"Error en el año o en la categoria ingresada"
+    raise HTTPException(status_code=404, detail="Error en el año o en la categoría ingresada")
 
-@app.delete("/EliminarPremio")
+@app.delete("/Eliminar_Premio")
 
-def EliminarPremio(premio:Premio):
-    premio = premio.convertirDict()
-    if premio in archivo["prizes"]:
-        archivo["prizes"].remove(premio)
+def Eliminar_Premio(Premiados:Premio):
+    premio_dict = Premiados.convertirDict()
+    if Premiados in archivo["prizes"]:
+        archivo["prizes"].remove(premio_dict)
         actualizarArchivo()
         return f"El premio se ha eliminado"
     else:
-        return f"No se pudo eliminar, porque el premio no existe"
+        raise HTTPException(status_code=404, detail="No se pudo eliminar, porque el premio no existe")
