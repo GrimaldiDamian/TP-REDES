@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 import json
 
 app = FastAPI()
