@@ -47,6 +47,10 @@ def archivo():
 
 archivo = archivo()
 
+def actualizarArchivo():
+    with open("prize.json", "w") as file:
+        json.dump(archivo, file)
+
 @app.get("/LeerArchivo")
 
 def LeerArchivo():
@@ -62,9 +66,9 @@ def Categorias():
     
     return categorias
 
-@app.get("/BuscarPremio")
+@app.get("/Buscar_Premio")
 
-def BuscarPremio(year:str,category:str):
+def Buscar_Premio(year:str,category:str):
     lista = []
     year_found = False
     category_found = False
@@ -87,9 +91,9 @@ def BuscarPremio(year:str,category:str):
     
     return lista
 
-@app.post("/agregarPremio")
+@app.post("/Agregar_Premio")
 
-def agregarPremio(Premiados : Premio):
+def Agregar_Premio(Premiados : Premio):
     
     nuevo_premio = Premiados.convertirDict()
     
@@ -100,3 +104,39 @@ def agregarPremio(Premiados : Premio):
         json.dump(archivo,file)
     
     return nuevo_premio, f"Se guardo correctamente"
+
+@app.put("/Actualizar_Laurete")
+
+def Actualizar_Laurete(year: int, categoria: str, laureates: list[Laureate]):
+    for premio in archivo.get("prizes", []):
+        if premio["year"] == str(year) and premio["category"] == categoria:
+            laureateAnterior = premio["laureates"]
+            laureateActual = [laureate.convertirDict() for laureate in laureates]
+            premio["laureates"] = laureateActual
+            actualizarArchivo()
+            return f"El laureado: {laureateAnterior} fue cambiado a {laureateActual}"
+    
+    return "Fecha o categoría no encontrada"
+
+@app.put("/Actualizar_Categoria")
+
+def Actualizar_Categoria(year:int,categoria_Anterior:str,categoria_Nueva:str):
+    year = str(year)
+    for premio in archivo.get("prizes",[]):
+        if premio["year"] == year and premio["category"] == categoria_Anterior:
+            premio["category"] = categoria_Nueva
+            actualizarArchivo()
+            return f"La nueva categoria fue exitosa"
+    
+    return f"Error en el año o en la categoria ingresada"
+
+@app.delete("/EliminarPremio")
+
+def EliminarPremio(premio:Premio):
+    premio = premio.convertirDict()
+    if premio in archivo["prizes"]:
+        archivo["prizes"].remove(premio)
+        actualizarArchivo()
+        return f"El premio se ha eliminado"
+    else:
+        return f"No se pudo eliminar, porque el premio no existe"
