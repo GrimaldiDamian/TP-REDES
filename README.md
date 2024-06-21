@@ -16,7 +16,9 @@ pip install uvicorn
 A la hora de ejecutar el archivo main (servidor api)
 utilizar el siguiente comando:
 
-uvicorn main:app --reload
+uvicorn main:app --host 0.0.0.0 --reload
+el host sirve para que cualquier dispositivo de la misma red se pueda conectarse, y para hacerlo, tiene que ser la misma direccion ip
+para ver cual es la direcciones ip, desde windows, se tiene que ejecutar ipconfig, y buscar una que diga 192.168.x.x (x, es cualquier numero) y a continuacion el numero del puerto.
 
 Luego con una pagina web ingresar:
 
