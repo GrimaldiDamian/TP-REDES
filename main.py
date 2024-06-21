@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional, List
 import json
 
 app = FastAPI()
@@ -10,6 +11,34 @@ class Laureate(BaseModel):
     surname: str
     motivation: str
     share: int
+    def convertirDict(self):
+        return {
+            "id": str(self.id),
+            "firstname": self.firstname,
+            "surname": self.surname,
+            "motivation": self.motivation,
+            "share": str(self.share)
+        }
+
+class Premio(BaseModel):
+    anio:int
+    categoria:str
+    laureate : list[Laureate]
+    overallMotivation : Optional[str] = None
+    def convertirDict(self):
+        if self.overallMotivation != None:
+            return {
+                "year": str(self.anio),
+                "category": self.categoria,
+                "laureates": [laureate.convertirDict() for laureate in self.laureate],
+                "overallMotivation": self.overallMotivation
+            }
+        else:
+            return {
+                "year": str(self.anio),
+                "category": self.categoria,
+                "laureates": [laureate.convertirDict() for laureate in self.laureate],
+            }
 
 def archivo():
     with open("prize.json", 'r') as file:
@@ -60,22 +89,9 @@ def BuscarPremio(year:str,category:str):
 
 @app.post("/agregarPremio")
 
-def agregarPremio(anio:int,categoria:str,Premiados:list[Laureate]):
-    laureates_dict = []
-    for premiado in Premiados:
-        premiado_dict = {
-            "id": str(premiado.id),
-            "firstname": premiado.firstname,
-            "surname": premiado.surname,
-            "motivation": premiado.motivation,
-            "share": str(premiado.share)
-        }
-        laureates_dict.append(premiado_dict)
-    nuevo_premio = {
-        "year": str(anio),
-        "category": categoria,
-        "laureates": laureates_dict
-    }
+def agregarPremio(Premiados : Premio):
+    
+    nuevo_premio = Premiados.convertirDict()
     
     archivo["prizes"].append(nuevo_premio)
     archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
@@ -83,4 +99,4 @@ def agregarPremio(anio:int,categoria:str,Premiados:list[Laureate]):
     with open("prize.json","w") as file:
         json.dump(archivo,file)
     
-    return nuevo_premio
+    return nuevo_premio, f"Se guardo correctamente"
