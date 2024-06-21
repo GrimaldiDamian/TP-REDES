@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import json
+import datetime
 
 app = FastAPI()
 
@@ -10,7 +11,7 @@ class Laureate(BaseModel):
     firstname: str
     surname: str
     motivation: str
-    share: int
+    share: int = Field(ge=1)
     def convertirDict(self):
         return {
             "id": str(self.id),
@@ -21,7 +22,7 @@ class Laureate(BaseModel):
         }
 
 class Premio(BaseModel):
-    anio:int
+    anio:int = Field(le = datetime.date.today().year, ge=1901)
     categoria:str
     laureate : list[Laureate]
     overallMotivation : Optional[str] = None
