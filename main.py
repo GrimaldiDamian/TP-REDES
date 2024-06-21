@@ -103,16 +103,20 @@ def Buscar_Premio(year:str,category:str):
 @app.post("/Agregar_Premio")
 
 def Agregar_Premio(Premiados : Premio):
-    
     nuevo_premio = Premiados.convertirDict()
-    
+
     if nuevo_premio not in archivo["prizes"]:
+        total = len(nuevo_premio["laureates"])
+
+        if len(nuevo_premio["laureates"]) != int(nuevo_premio["laureates"][0]["share"]):
+            raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(nuevo_premio["laureates"])}, {int(nuevo_premio["laureates"][0]["share"])}")
+
         archivo["prizes"].append(nuevo_premio)
         archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
         actualizarArchivo()
-        return {"nuevo_premio": nuevo_premio, "mensaje": "Se guardó correctamente"}
-    
-    raise HTTPException(status_code=400, detail="Ya existe dicho premio")
+    else:
+        raise HTTPException(status_code=400, detail="Ya existe dicho premio")
+    return {"nuevo_premio": nuevo_premio, "mensaje": "Se guardó correctamente"}
 
 @app.put("/Actualizar_Laureate")
 
