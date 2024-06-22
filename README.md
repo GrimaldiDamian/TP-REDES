@@ -23,3 +23,7 @@ para ver cual es la direcciones ip, desde windows, se tiene que ejecutar ipconfi
 Luego con una pagina web ingresar:
 
 http://127.0.0.1:8000/docs #En la parte de los numeros seria, con lo que sale luego de uvicorn, y en la parte de docs, para ir probando los metodos.
+
+para ingresar desde otro dispostivo, con el numero ip + numero puerto es decir: 192.168.X.X:8000 (el puerto por defecto)
+
+Una vez realizado hasta este punto, para que haya una comunicacion entre cliente-servidor se tendria que ejecutar primero la api, para que se mantenga encendida a la hora de ejecutar el archivo de clienteApi. Despues se ejecuta el archivo clienteApi.py
