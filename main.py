@@ -1,7 +1,37 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Annotated
+from jose import jwt
 import json
 
 app = FastAPI()
+contraseña = OAuth2PasswordBearer(tokenUrl="token") #token tiene que estar creada
+
+secret_key = "Prueba de contraseña"
+
+users = {
+    "damian" : {"username": "damian","email":"grimaldidamian001@gmail.com","password":"1234"},
+    "user2" :  {"username": "user2","email":"user2@gmail.com","password":"1234"}
+}
+
+def encode_token(payload:dict) ->str:
+    token = jwt.encode(payload, secret_key,algorithm="HS256")
+    return token
+
+def decode_token(token:Annotated[str,Depends(contraseña)]) -> dict:
+    data = jwt.decode(token,secret_key,algorithms=["HS256"])
+    user = users.get(data["username"])
+    return user
+
+@app.post("/token")
+def token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    user = users.get(form_data.username)
+    
+    if not user or user["password"] != form_data.password:
+        raise HTTPException(status_code=400, detail="Usuario o password incorrecto")
+    
+    token = encode_token({"username": user["username"],"email":user["email"]})
+    return {"access_token":token}
 
 def cargar_archivo():
     try:
@@ -64,7 +94,7 @@ def Buscar_Premio(year:str,category:str):
 
 @app.post("/Agregar_Premio")
 
-def Agregar_Premio(Premiados : dict):
+def Agregar_Premio(Premiados : Annotated[dict,Depends(decode_token)]):
     if Premiados not in archivo["prizes"]:
         total = len(Premiados["laureates"])
 
@@ -80,7 +110,7 @@ def Agregar_Premio(Premiados : dict):
 
 @app.put("/Actualizar_Laureate")
 
-def Actualizar_Laurete(premioNuevo: dict):
+def Actualizar_Laurete(premioNuevo: Annotated[dict,Depends(decode_token)]):
     for premio in archivo.get("prizes", []):
         if premio["year"] == premioNuevo["year"] and premio["category"] == premioNuevo["category"]:
             laureateAnterior = premio["laureates"]
@@ -92,7 +122,7 @@ def Actualizar_Laurete(premioNuevo: dict):
 
 @app.put("/Actualizar_Categoria")
 
-def Actualizar_Categoria(year:int,categoria_Anterior:str,categoria_Nueva:str):
+def Actualizar_Categoria(year:Annotated[int,Depends(decode_token)],categoria_Anterior:Annotated[str,Depends(decode_token)],categoria_Nueva:Annotated[str,Depends(decode_token)]):
     year = str(year)
     for premio in archivo.get("prizes",[]):
         if premio["year"] == year and premio["category"] == categoria_Anterior:
@@ -104,7 +134,7 @@ def Actualizar_Categoria(year:int,categoria_Anterior:str,categoria_Nueva:str):
 
 @app.delete("/Eliminar_Premio")
 
-def Eliminar_Premio(Premiados:dict):
+def Eliminar_Premio(Premiados:Annotated[dict,Depends(decode_token)]):
     if Premiados in archivo["prizes"]:
         archivo["prizes"].remove(Premiados)
         actualizarArchivo()
