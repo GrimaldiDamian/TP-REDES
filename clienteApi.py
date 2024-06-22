@@ -10,10 +10,15 @@ def verArchivo():
     return respuesta.json()
 
 def VerCategorias():
-    pass
+    respuesta = requests.get(f'{url}/Categorias')
+    return respuesta.json()
 
 def BuscarPremio():
-    pass
+    anio = int(input("Ingrese un anio: "))
+    categoria = input("Ingrese una categoria: ")
+    respuesta = requests.get(f'{url}/Buscar_Premio', params={"year":str(anio),"category":categoria})
+    respuesta.raise_for_status()
+    return respuesta.json()
 
 def AgregarPremio():
     pass
@@ -35,16 +40,16 @@ def menu():
         elif op==1:
             print(verArchivo())
         elif op ==2:
-            VerCategorias()
+            print(VerCategorias())
         elif op == 3:
-            BuscarPremio()
+            print(BuscarPremio())
         elif op == 4:
-            AgregarPremio()
+            print(AgregarPremio())
         elif op==5:
-            ActualizarLaureate()
+            print(ActualizarLaureate())
         elif op==6:
-            ActualizarCategoria()
+            print(ActualizarCategoria())
         elif op==7:
-            EliminarPremio()
+            print(EliminarPremio())
 
 menu()
