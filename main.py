@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from clases import *
 import json
 
 app = FastAPI()
@@ -65,32 +64,29 @@ def Buscar_Premio(year:str,category:str):
 
 @app.post("/Agregar_Premio")
 
-def Agregar_Premio(Premiados : Premio):
-    nuevo_premio = Premiados.convertirDict()
+def Agregar_Premio(Premiados : dict):
+    if Premiados not in archivo["prizes"]:
+        total = len(Premiados["laureates"])
 
-    if nuevo_premio not in archivo["prizes"]:
-        total = len(nuevo_premio["laureates"])
+        if len(Premiados["laureates"]) != int(Premiados["laureates"][0]["share"]):
+            raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(Premiados["laureates"])}, {int(Premiados["laureates"][0]["share"])}")
 
-        if len(nuevo_premio["laureates"]) != int(nuevo_premio["laureates"][0]["share"]):
-            raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(nuevo_premio["laureates"])}, {int(nuevo_premio["laureates"][0]["share"])}")
-
-        archivo["prizes"].append(nuevo_premio)
+        archivo["prizes"].append(Premiados)
         archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
         actualizarArchivo()
     else:
         raise HTTPException(status_code=400, detail="Ya existe dicho premio")
-    return {"nuevo_premio": nuevo_premio, "mensaje": "Se guardó correctamente"}
+    return {"nuevo_premio": Premiados, "mensaje": "Se guardó correctamente"}
 
 @app.put("/Actualizar_Laureate")
 
-def Actualizar_Laurete(year: int, categoria: str, laureates: list[Laureate]):
+def Actualizar_Laurete(premioNuevo: dict):
     for premio in archivo.get("prizes", []):
-        if premio["year"] == str(year) and premio["category"] == categoria:
+        if premio["year"] == premioNuevo["year"] and premio["category"] == premioNuevo["category"]:
             laureateAnterior = premio["laureates"]
-            laureateActual = [laureate.convertirDict() for laureate in laureates]
-            premio["laureates"] = laureateActual
+            premio["laureates"] = premioNuevo["laureates"]
             actualizarArchivo()
-            return f"El laureado: {laureateAnterior} fue cambiado a {laureateActual}"
+            return f"El laureado: {laureateAnterior} fue cambiado a {premioNuevo["laureates"]}"
     
     raise HTTPException(status_code=404, detail="Fecha o categoría no encontrada")
 
@@ -108,10 +104,9 @@ def Actualizar_Categoria(year:int,categoria_Anterior:str,categoria_Nueva:str):
 
 @app.delete("/Eliminar_Premio")
 
-def Eliminar_Premio(Premiados:Premio):
-    premio_dict = Premiados.convertirDict()
+def Eliminar_Premio(Premiados:dict):
     if Premiados in archivo["prizes"]:
-        archivo["prizes"].remove(premio_dict)
+        archivo["prizes"].remove(Premiados)
         actualizarArchivo()
         return f"El premio se ha eliminado"
     else:

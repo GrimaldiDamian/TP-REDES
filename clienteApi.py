@@ -15,22 +15,79 @@ def VerCategorias():
 
 def BuscarPremio():
     anio = int(input("Ingrese un anio: "))
-    categoria = input("Ingrese una categoria: ")
+    categoria = input("Ingrese una categoria: ").lower()
     respuesta = requests.get(f'{url}/Buscar_Premio', params={"year":str(anio),"category":categoria})
     respuesta.raise_for_status()
     return respuesta.json()
 
+def agregarLaureate():
+    lista =[]
+    
+    share = int(input("Ingrese con cuantos participantes se comparte: "))
+    for i in range(share):
+        id = int(input("Ingrese el id: "))
+        firstname = input("Ingrese el nombre del laureado: ")
+        surname = input("Ingrese el apellido del laureado: ")
+        motivation = input("Ingrese la motivación del laureado: ")
+        laureates = Laureate(id=id, firstname=firstname, surname=surname, motivation=motivation, share=share)
+        lista.append(laureates)
+    
+    return lista
+
 def AgregarPremio():
-    pass
+    year = int(input("Ingrese el anio del premio: "))
+    
+    categoria = input("Ingrese la categoria: ")
+    
+    overallMotivation = input("Si hay overallMotivation, ingreselo o saltea (ingrese None para saltear) ")
+    overallMotivation = overallMotivation if overallMotivation != "None" else None
+    
+    laureate = agregarLaureate()
+    
+    premio = Premio(anio=year, categoria=categoria, laureate=laureate, overallMotivation=overallMotivation)
+    premio_dict = premio.convertirDict()
+    
+    respuesta = requests.post(f"{url}/Agregar_Premio", json = premio_dict)
+    respuesta.raise_for_status()
+    return respuesta.json()
 
 def ActualizarLaureate():
-    pass
+    year = int(input("Ingrese el anio del premio que quieres modificar: "))
+    categoria = input("Ingrese la categoria que quieres modificar: ")
+    laureate = agregarLaureate()
+    
+    premio = Premio(anio=year, categoria=categoria, laureate=laureate, overallMotivation=None)
+    premio_dict = premio.convertirDict
+    
+    respuesta = requests.post(f"{url}/Actualizar_Laureate", json = premio_dict)
+    respuesta.raise_for_status()
+    return respuesta.json()
 
 def ActualizarCategoria():
-    pass
+    year = int(input("Ingrese el anio del premio que quieres modificar: "))
+    categoria = input("Ingrese la categoria que quieres modificar: ")
+    categoriaNueva = input("Ingrese la nueva categoria: ")
+    
+    respuesta = requests.post(f"{url}/Actualizar_Laureate", params={"year": year, "categoria_Anterior": categoria, "categoria_Nueva": categoriaNueva})
+    respuesta.raise_for_status()
+    return respuesta.json()
 
 def EliminarPremio():
-    pass
+    year = int(input("Ingrese el anio del premio que deseas eliminar: "))
+    
+    categoria = input("Ingrese la categoria que deseas eliminar:  ")
+    
+    overallMotivation = input("Si hay overallMotivation, ingreselo o saltea (ingrese None para saltear) ")
+    overallMotivation = overallMotivation if overallMotivation != "None" else None
+    
+    laureate = agregarLaureate()
+    
+    premio = Premio(anio=year, categoria=categoria, laureate=laureate, overallMotivation=overallMotivation)
+    premio_dict = premio.convertirDict()
+    
+    respuesta = requests.delete(f"{url}/Eliminar_Premio", json = premio_dict)
+    respuesta.raise_for_status()
+    return respuesta.json()
 
 def menu():
     while True:
