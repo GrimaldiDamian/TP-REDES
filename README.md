@@ -12,6 +12,7 @@ Una vez hecho, deberas descargar las librerias necesarias:
 pip install fastapi
 pip install requests
 pip install uvicorn
+pip install python-jose #Para generar las claves
 
 A la hora de ejecutar el archivo main (servidor api)
 utilizar el siguiente comando:
