@@ -35,7 +35,7 @@ def token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 def cargar_archivo():
     try:
-        with open("prize.json", 'r') as file:
+        with open("prize.json", 'r', encoding='utf-8') as file:
             dicJson = json.load(file)
         return dicJson
     except FileNotFoundError:
@@ -94,11 +94,12 @@ def Buscar_Premio(year:str,category:str):
 
 @app.post("/Agregar_Premio")
 
-def Agregar_Premio(Premiados : Annotated[dict,Depends(decode_token)]):
+def Agregar_Premio(user: Annotated[dict,Depends(decode_token)],Premiados : dict):
+    
     if Premiados not in archivo["prizes"]:
         total = len(Premiados["laureates"])
 
-        if len(Premiados["laureates"]) != int(Premiados["laureates"][0]["share"]):
+        if total != int(Premiados["laureates"][0]["share"]):
             raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(Premiados["laureates"])}, {int(Premiados["laureates"][0]["share"])}")
 
         archivo["prizes"].append(Premiados)
@@ -110,7 +111,8 @@ def Agregar_Premio(Premiados : Annotated[dict,Depends(decode_token)]):
 
 @app.put("/Actualizar_Laureate")
 
-def Actualizar_Laurete(premioNuevo: Annotated[dict,Depends(decode_token)]):
+def Actualizar_Laurete(user: Annotated[dict,Depends(decode_token)],premioNuevo: Annotated[dict,Depends(decode_token)]):
+    
     for premio in archivo.get("prizes", []):
         if premio["year"] == premioNuevo["year"] and premio["category"] == premioNuevo["category"]:
             laureateAnterior = premio["laureates"]
@@ -122,7 +124,7 @@ def Actualizar_Laurete(premioNuevo: Annotated[dict,Depends(decode_token)]):
 
 @app.put("/Actualizar_Categoria")
 
-def Actualizar_Categoria(year:Annotated[int,Depends(decode_token)],categoria_Anterior:Annotated[str,Depends(decode_token)],categoria_Nueva:Annotated[str,Depends(decode_token)]):
+def Actualizar_Categoria(user: Annotated[dict,Depends(decode_token)], year:int,categoria_Anterior:str,categoria_Nueva:str):
     year = str(year)
     for premio in archivo.get("prizes",[]):
         if premio["year"] == year and premio["category"] == categoria_Anterior:
@@ -134,7 +136,7 @@ def Actualizar_Categoria(year:Annotated[int,Depends(decode_token)],categoria_Ant
 
 @app.delete("/Eliminar_Premio")
 
-def Eliminar_Premio(Premiados:Annotated[dict,Depends(decode_token)]):
+def Eliminar_Premio(user: Annotated[dict,Depends(decode_token)], Premiados:dict):
     if Premiados in archivo["prizes"]:
         archivo["prizes"].remove(Premiados)
         actualizarArchivo()

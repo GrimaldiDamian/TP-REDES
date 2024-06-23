@@ -9,7 +9,10 @@ def login():
     password = input("Ingrese su password: ")
     respuesta = requests.post(f"{url}/token",data={"username":usuario,"password":password})
     respuesta.raise_for_status()
-    return respuesta.json()
+    return respuesta.json()["access_token"]
+
+def get_headers(token):
+    return {"Authorization": f"Bearer {token}"}
 
 def verArchivo():
     respuesta = requests.get(f'{url}/Leer_Archivo')
@@ -116,5 +119,6 @@ def menu(token):
         elif op==7:
             print(EliminarPremio(token))
 
-token=login()
+valor=login()
+token = get_headers(valor)
 menu(token)
