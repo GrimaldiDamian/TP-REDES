@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from jose import jwt
+from clases import *
 import json
 
 app = FastAPI()
@@ -10,7 +11,7 @@ contraseña = OAuth2PasswordBearer(tokenUrl="token") #token tiene que estar crea
 secret_key = "Prueba de contraseña"
 
 users = {
-    "damian" : {"username": "damian","email":"grimaldidamian001@gmail.com","password":"1234", "tipo de usuario": "admin"},
+    "administrador" : {"username": "administrador","email":"administrador@gmail.com","password":"4321", "tipo de usuario": "admin"},
     "user2" :  {"username": "user2","email":"user2@gmail.com","password":"1234","tipo de usuario": "cliente"}
 }
 
@@ -113,11 +114,11 @@ def Agregar_Premio(user: Annotated[dict,Depends(decode_token)],Premiados : dict)
         return {"nuevo_premio": Premiados, "mensaje": "Se guardó correctamente"}
     
     else:
-        return f"Permiso denegado"
+        raise HTTPException(status_code=403, detail="Fue rechazado por el servidor")
 
 @app.put("/Actualizar_Laureate")
 
-def Actualizar_Laureate(user: Annotated[dict,Depends(decode_token)],premioNuevo: Annotated[dict,Depends(decode_token)]):
+def Actualizar_Laureate(user: Annotated[dict,Depends(decode_token)],premioNuevo: dict):
     
     if user["tipo de usuario"] == "admin":
     
