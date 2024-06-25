@@ -16,18 +16,18 @@ def login():
 def get_headers(token):
     return {"Authorization": f"Bearer {token}"}
 
-def verArchivo():
-    respuesta = requests.get(f'{url}/Leer_Archivo')
+def verArchivo(token):
+    respuesta = requests.get(f'{url}/Leer_Archivo',headers=token)
     return respuesta.json()
 
-def VerCategorias():
-    respuesta = requests.get(f'{url}/Categorias')
+def VerCategorias(token):
+    respuesta = requests.get(f'{url}/Categorias',headers=token)
     return respuesta.json()
 
-def BuscarPremio():
+def BuscarPremio(token):
     anio = int(input("Ingrese un anio: "))
     categoria = input("Ingrese una categoria: ").lower()
-    respuesta = requests.get(f'{url}/Buscar_Premio', params={"year":str(anio),"category":categoria})
+    respuesta = requests.get(f'{url}/Buscar_Premio',headers=token, params={"year":str(anio),"category":categoria})
     respuesta.raise_for_status()
     return respuesta.json()
 
