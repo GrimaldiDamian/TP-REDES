@@ -35,14 +35,9 @@ def token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     return {"access_token":token}
 
 def cargar_archivo():
-    try:
-        with open("prize.json", 'r', encoding='utf-8') as file:
-            dicJson = json.load(file)
-        return dicJson
-    except FileNotFoundError:
-        return {"prizes": []}
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Error leyendo el archivo JSON")
+    with open("prize.json", 'r', encoding='utf-8') as file:
+        dicJson = json.load(file)
+    return dicJson
 
 archivo = cargar_archivo()
 
