@@ -13,6 +13,7 @@ pip install fastapi
 pip install requests
 pip install uvicorn
 pip install python-jose #Para generar las claves
+pip install pydantic
 
 A la hora de ejecutar el archivo main (servidor api)
 utilizar el siguiente comando:
