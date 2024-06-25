@@ -10,8 +10,8 @@ contraseña = OAuth2PasswordBearer(tokenUrl="token") #token tiene que estar crea
 secret_key = "Prueba de contraseña"
 
 users = {
-    "damian" : {"username": "damian","email":"grimaldidamian001@gmail.com","password":"1234"},
-    "user2" :  {"username": "user2","email":"user2@gmail.com","password":"1234"}
+    "damian" : {"username": "damian","email":"grimaldidamian001@gmail.com","password":"1234", "tipo de usuario": "admin"},
+    "user2" :  {"username": "user2","email":"user2@gmail.com","password":"1234","tipo de usuario": "cliente"}
 }
 
 def encode_token(payload:dict) ->str:
@@ -54,22 +54,23 @@ def actualizarArchivo():
 
 @app.get("/Leer_Archivo")
 
-def Leer_Archivo():
-    return archivo
+def Leer_Archivo(user:Annotated[dict,Depends(decode_token)]):
+    if not user:
+        return archivo
 
 @app.get("/Categorias")
 
-def Categorias():
+def Categorias(user:Annotated[dict,Depends(decode_token)]):
     categorias = []
     for valores in archivo.get("prizes", []):
         if valores.get("category") not in categorias:
             categorias.append(valores["category"])
     
     return categorias
-
+    
 @app.get("/Buscar_Premio")
 
-def Buscar_Premio(year:str,category:str):
+def Buscar_Premio(user:Annotated[dict,Depends(decode_token)],year:str,category:str):
     lista = []
     year_found = False
     category_found = False
@@ -96,50 +97,72 @@ def Buscar_Premio(year:str,category:str):
 
 def Agregar_Premio(user: Annotated[dict,Depends(decode_token)],Premiados : dict):
     
-    if Premiados not in archivo["prizes"]:
-        total = len(Premiados["laureates"])
+    if user["tipo de usuario"] == "admin":
+    
+        if Premiados not in archivo["prizes"]:
+            total = len(Premiados["laureates"])
 
-        if total != int(Premiados["laureates"][0]["share"]):
-            raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(Premiados["laureates"])}, {int(Premiados["laureates"][0]["share"])}")
+            if total != int(Premiados["laureates"][0]["share"]):
+                raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(Premiados["laureates"])}, {int(Premiados["laureates"][0]["share"])}")
 
-        archivo["prizes"].append(Premiados)
-        archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
-        actualizarArchivo()
+            archivo["prizes"].append(Premiados)
+            archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
+            actualizarArchivo()
+        else:
+            raise HTTPException(status_code=400, detail="Ya existe dicho premio")
+        return {"nuevo_premio": Premiados, "mensaje": "Se guardó correctamente"}
+    
     else:
-        raise HTTPException(status_code=400, detail="Ya existe dicho premio")
-    return {"nuevo_premio": Premiados, "mensaje": "Se guardó correctamente"}
+        return f"Permiso denegado"
 
 @app.put("/Actualizar_Laureate")
 
-def Actualizar_Laurete(user: Annotated[dict,Depends(decode_token)],premioNuevo: Annotated[dict,Depends(decode_token)]):
+def Actualizar_Laureate(user: Annotated[dict,Depends(decode_token)],premioNuevo: Annotated[dict,Depends(decode_token)]):
     
-    for premio in archivo.get("prizes", []):
-        if premio["year"] == premioNuevo["year"] and premio["category"] == premioNuevo["category"]:
-            laureateAnterior = premio["laureates"]
-            premio["laureates"] = premioNuevo["laureates"]
-            actualizarArchivo()
-            return f"El laureado: {laureateAnterior} fue cambiado a {premioNuevo["laureates"]}"
+    if user["tipo de usuario"] == "admin":
     
-    raise HTTPException(status_code=404, detail="Fecha o categoría no encontrada")
+        for premio in archivo.get("prizes", []):
+            if premio["year"] == premioNuevo["year"] and premio["category"] == premioNuevo["category"]:
+                laureateAnterior = premio["laureates"]
+                premio["laureates"] = premioNuevo["laureates"]
+                actualizarArchivo()
+                return f"El laureado: {laureateAnterior} fue cambiado a {premioNuevo["laureates"]}"
+        
+        raise HTTPException(status_code=404, detail="Fecha o categoría no encontrada")
+    
+    else:
+        return f"Permiso denegado"
 
 @app.put("/Actualizar_Categoria")
 
 def Actualizar_Categoria(user: Annotated[dict,Depends(decode_token)], year:int,categoria_Anterior:str,categoria_Nueva:str):
-    year = str(year)
-    for premio in archivo.get("prizes",[]):
-        if premio["year"] == year and premio["category"] == categoria_Anterior:
-            premio["category"] = categoria_Nueva
-            actualizarArchivo()
-            return f"La nueva categoria fue exitosa"
     
-    raise HTTPException(status_code=404, detail="Error en el año o en la categoría ingresada")
+    if user["tipo de usuario"] == "admin":
+    
+        year = str(year)
+        for premio in archivo.get("prizes",[]):
+            if premio["year"] == year and premio["category"] == categoria_Anterior:
+                premio["category"] = categoria_Nueva
+                actualizarArchivo()
+                return f"La nueva categoria fue exitosa"
+        
+        raise HTTPException(status_code=404, detail="Error en el año o en la categoría ingresada")
+    
+    else:
+        return f"Permiso denegado"
 
 @app.delete("/Eliminar_Premio")
 
 def Eliminar_Premio(user: Annotated[dict,Depends(decode_token)], Premiados:dict):
-    if Premiados in archivo["prizes"]:
-        archivo["prizes"].remove(Premiados)
-        actualizarArchivo()
-        return f"El premio se ha eliminado"
+    
+    if user["tipo de usuario"] == "admin":
+        
+        if Premiados in archivo["prizes"]:
+            archivo["prizes"].remove(Premiados)
+            actualizarArchivo()
+            return f"El premio se ha eliminado"
+        else:
+            raise HTTPException(status_code=404, detail="No se pudo eliminar, porque el premio no existe")
+    
     else:
-        raise HTTPException(status_code=404, detail="No se pudo eliminar, porque el premio no existe")
+        return f"Permiso denegado"

@@ -11,12 +11,13 @@ def login():
     respuesta.raise_for_status()
     return respuesta.json()["access_token"]
 
+#Aca al token lo transforma de esta manera para poder mandarlo, porque sino produce error
+
 def get_headers(token):
     return {"Authorization": f"Bearer {token}"}
 
 def verArchivo():
     respuesta = requests.get(f'{url}/Leer_Archivo')
-    respuesta.raise_for_status()
     return respuesta.json()
 
 def VerCategorias():
