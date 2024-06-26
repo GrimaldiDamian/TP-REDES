@@ -1,15 +1,19 @@
+
 import json
 
 archivoJson = "prize.json"
 
+#Funcion que toma como entrada el archivo y carga el contenido en un diccionario
 def diccJson(archivo):
     with open (archivo) as file:
         dicJson = json.load(file)
     return dicJson
 
+# Calcula y devuelve la cantidad de objetos del diccionario
 def cantObjeto(dicc):
     return len(dicc)
 
+#Extrae las propiedades y tipos de datos de cada elemento dentro de las listas que contiene
 def propiedades(dicc):
     NomProp = {}
 
@@ -27,6 +31,8 @@ def propiedades(dicc):
                         NomProp[propiedades] = atributos.__class__.__name__
     
     return NomProp
+
+#Genera un informe imprimiendo la cantidad de objetos en el archivo Json
 
 def Informe(cantObjeto,propiedades):
     print (f"El archivo json cuenta con un total de {cantObjeto}, y posee los siguientes atributos:")

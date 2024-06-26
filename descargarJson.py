@@ -1,7 +1,6 @@
-import requests
+#Etapa 1: funcion para descargar archivo Json
 
-url = "https://api.nobelprize.org/v1/prize.json"
-archivoJson = "prize.json"
+import requests
 
 def descargarJson(url, save_path):
     try:
@@ -12,6 +11,3 @@ def descargarJson(url, save_path):
         print(f"JSON descargado y guardado en {save_path}")
     except requests.exceptions.RequestException as e:
         print(f"Error descargando el JSON: {e}")
-
-
-descargarJson(url,archivoJson)

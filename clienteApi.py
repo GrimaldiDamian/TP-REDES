@@ -4,6 +4,7 @@ from clases import *
 
 url = "http://localhost:8000"
 
+
 def login():
     usuario = input("Ingrese su usuario: ")
     password = input("Ingrese su password: ")
@@ -11,23 +12,22 @@ def login():
     respuesta.raise_for_status()
     return respuesta.json()["access_token"]
 
-#Aca al token lo transforma de esta manera para poder mandarlo, porque sino produce error
-
 def get_headers(token):
     return {"Authorization": f"Bearer {token}"}
 
-def verArchivo(token):
-    respuesta = requests.get(f'{url}/Leer_Archivo',headers=token)
+def verArchivo():
+    respuesta = requests.get(f'{url}/Leer_Archivo')
+    respuesta.raise_for_status()
     return respuesta.json()
 
-def VerCategorias(token):
-    respuesta = requests.get(f'{url}/Categorias',headers=token)
+def VerCategorias():
+    respuesta = requests.get(f'{url}/Categorias')
     return respuesta.json()
 
-def BuscarPremio(token):
+def BuscarPremio():
     anio = int(input("Ingrese un anio: "))
     categoria = input("Ingrese una categoria: ").lower()
-    respuesta = requests.get(f'{url}/Buscar_Premio',headers=token, params={"year":str(anio),"category":categoria})
+    respuesta = requests.get(f'{url}/Buscar_Premio', params={"year":str(anio),"category":categoria})
     respuesta.raise_for_status()
     return respuesta.json()
 
@@ -106,11 +106,12 @@ def menu(token):
         if op == 0:
             break
         elif op==1:
-            print(verArchivo())
+  
+            print(verArchivo(token))
         elif op ==2:
-            print(VerCategorias())
+            print(VerCategorias(token))
         elif op == 3:
-            print(BuscarPremio())
+            print(BuscarPremio(token))
         elif op == 4:
             print(AgregarPremio(token))
         elif op==5:
@@ -123,3 +124,4 @@ def menu(token):
 valor=login()
 token = get_headers(valor)
 menu(token)
+

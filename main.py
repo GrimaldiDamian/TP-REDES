@@ -2,8 +2,14 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from jose import jwt
-from clases import *
 import json
+import os
+from descargarJson import descargarJson
+
+file_path = 'prize.json'
+
+
+#Definicion de clave secreta y usuarios
 
 app = FastAPI()
 contraseña = OAuth2PasswordBearer(tokenUrl="token") #token tiene que estar creada
@@ -19,10 +25,11 @@ def encode_token(payload:dict) ->str:
     token = jwt.encode(payload, secret_key,algorithm="HS256")
     return token
 
-def decode_token(token:Annotated[str,Depends(contraseña)]) -> dict:
+def decode_token(token:Annotated[str,Depends(contraseña)]) -> dict:   
     data = jwt.decode(token,secret_key,algorithms=["HS256"])
     user = users.get(data["username"])
     return user
+
 
 @app.post("/token")
 def token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
@@ -34,20 +41,35 @@ def token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     token = encode_token({"username": user["username"],"email":user["email"]})
     return {"access_token":token}
 
+
+#Cargar y actualizar archivo
+
 def cargar_archivo():
     with open("prize.json", 'r', encoding='utf-8') as file:
         dicJson = json.load(file)
     return dicJson
 
-archivo = cargar_archivo()
+
+if os.path.exists(file_path):
+    archivo = cargar_archivo()  
+
+else:
+    print("El archivo no existe, descargando archivo")
+    url = "https://api.nobelprize.org/v1/prize.json"
+    archivoJson = "prize.json"
+    descargarJson(url,archivoJson)
+    archivo = cargar_archivo()
+    
 
 def actualizarArchivo():
     try:
         with open("prize.json", "w") as file:
             json.dump(archivo, file, indent=4)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error actualizando el archivo JSON: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al actualizar el archivo JSON: {e}")
 
+
+# Rutas para operaciones con el archivo JSON
 @app.get("/Leer_Archivo")
 
 def Leer_Archivo(user:Annotated[dict,Depends(decode_token)]):
@@ -83,9 +105,9 @@ def Buscar_Premio(user:Annotated[dict,Depends(decode_token)],year:str,category:s
                     lista.append(datos_participante)
     
     if not year_found:
-        raise HTTPException(status_code=404, detail=f"Error: El año {year} no se encontró en el archivo.")
+        raise HTTPException(status_code=400, detail=f"Error: El año {year} no se encontró en el archivo.")
     if not category_found:
-        raise HTTPException(status_code=404, detail=f"Error: La categoría {category} no se encontró para el año {year}.")
+        raise HTTPException(status_code=400, detail=f"Error: La categoría {category} no se encontró para el año {year}.")
     
     return lista
 
@@ -99,7 +121,7 @@ def Agregar_Premio(user: Annotated[dict,Depends(decode_token)],Premiados : dict)
             total = len(Premiados["laureates"])
 
             if total != int(Premiados["laureates"][0]["share"]):
-                raise HTTPException(status_code=404, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(Premiados["laureates"])}, {int(Premiados["laureates"][0]["share"])}")
+                raise HTTPException(status_code=400, detail=f"La cantidad de shares no coincide con la cantidad de laureados. {len(Premiados["laureates"])}, {int(Premiados["laureates"][0]["share"])}")
 
             archivo["prizes"].append(Premiados)
             archivo["prizes"] = sorted(archivo["prizes"], key=lambda x: x["year"], reverse=True)
