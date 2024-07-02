@@ -73,8 +73,7 @@ def actualizarArchivo():
 @app.get("/Leer_Archivo")
 
 def Leer_Archivo(user:Annotated[dict,Depends(decode_token)]):
-    if not user:
-        return archivo
+    return archivo
 
 @app.get("/Categorias")
 
