@@ -70,7 +70,7 @@ def ActualizarLaureate(token):
     premio = Premio(anio=year, categoria=categoria, laureate=laureate, overallMotivation=None)
     premio_dict = premio.convertirDict
     
-    respuesta = requests.post(f"{url}/Actualizar_Laureate",headers=token, json = premio_dict)
+    respuesta = requests.put(f"{url}/Actualizar_Laureate",headers=token, json = premio_dict)
     respuesta.raise_for_status()
     return respuesta.json()
 
@@ -79,7 +79,7 @@ def ActualizarCategoria(token):
     categoria = input("Ingrese la categoria que quieres modificar: ")
     categoriaNueva = input("Ingrese la nueva categoria: ")
     
-    respuesta = requests.post(f"{url}/Actualizar_Laureate",headers=token, params={"year": year, "categoria_Anterior": categoria, "categoria_Nueva": categoriaNueva})
+    respuesta = requests.put(f"{url}/Actualizar_Laureate",headers=token, params={"year": year, "categoria_Anterior": categoria, "categoria_Nueva": categoriaNueva})
     respuesta.raise_for_status()
     return respuesta.json()
 
